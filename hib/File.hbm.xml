@@ -1,0 +1,12 @@
+<hibernate-mapping>
+    <class name="Model.File" table="File" catalog="Huffman">
+        <id name="fileId" type="java.lang.Integer">
+            <column name="fileId" />
+            <generator class="identity" />
+        </id>
+        <property name="fileName" type="string">
+            <column name="fileName" length="10" not-null="true" unique="true" />
+        </property>
+      
+    </class>
+</hibernate-mapping>

@@ -14,38 +14,29 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-public class Decompress extends AbstractHuffman
-{
-	
-	
-
-  
+public class Decompress extends AbstractHuffman {
 
 	String files = "";
-    Node root = null;
-    int fileArrayContor = 0;
-    int length = 0;
+	Node root = null;
+	int fileArrayContor = 0;
+	long length = 0;
 
-    byte[] fileChunkArray;
-    StringBuilder chunkStringBUilder = new StringBuilder();
-    int chunkStringContor = 0;
-    boolean lastBitFlag = true;
+	byte[] fileChunkArray;
+	StringBuilder chunkStringBUilder = new StringBuilder();
+	int chunkStringContor = 0;
+	boolean lastBitFlag = true;
 
-   public  Decompress(String file)
-    {
-        files = file;
-    }
+	public Decompress(String file) {
+		files = file;
+	}
 
-    HashMap<String, Node> tree = new HashMap<String, Node>();
+	HashMap<String, Node> tree = new HashMap<String, Node>();
 
-    
+	String boss = "";
+	String lastbit = "";
+	String decompressedsize = "";
 
-    String boss="";
-    String lastbit="";
-    String decompressedsize = "";
-    
-
-    public String getLastbit() {
+	public String getLastbit() {
 		return lastbit;
 	}
 
@@ -61,95 +52,83 @@ public class Decompress extends AbstractHuffman
 		this.decompressedsize = decompressedsize;
 	}
 
-	public void decompressFile(String fil, String dest) throws IOException
-    {
-        File file = new File(fil);
-        FileInputStream fis = null;
+	FileInputStream fis = null;
 
-        fis = new FileInputStream(file);
-        BufferedOutputStream destprint = new BufferedOutputStream(new FileOutputStream(new File(dest)));
-        byte[] buffer2 = new byte[10000];
-        ByteArrayOutputStream filearray = new ByteArrayOutputStream();
-        int rad = 0;
-        while((rad = fis.read(buffer2)) > 0)
-        {
-            length += rad;
-            filearray.write(buffer2,0,rad);
-        }
-        filearray.flush();
-root=this.getCompressionTree();
-        fileChunkArray = filearray.toByteArray();
+	public void decompressFile(String fil, String dest) throws IOException {
+		File file = new File(fil);
+		hk = file.length();
+		fis = new FileInputStream(file);
+		BufferedOutputStream destprint = new BufferedOutputStream(
+				new FileOutputStream(new File(dest)));
 
-        int len = Integer.parseInt(decompressedsize);
-        for(int i = 0; i < len; i++)
-        {
-        	System.out.println(i+" "+len);
-            getCharacter(len, root, destprint, lastbit);
+		root = this.getCompressionTree();
 
-        }
-        destprint.flush();
-        fis.close();
+		int len = Integer.parseInt(decompressedsize);
+		for (int i = 0; i < len; i++) {
+			if (i % 1000000 == 0) {
+				System.out.println(i + " " + len);
+				destprint.flush();
 
-    }
+			}
+			getCharacter(len, root, destprint, lastbit);
+
+		}
+
+		destprint.flush();
+		fis.close();
+
+	}
 
 
-int hk=0;
-int ct=0;
-    public char getNext(String lasBit, int len)
-    {      
-    	ct++;
+	long hk = 0;
+	int ct = 0;
+	int lngth = 0;
 
-        if(fileArrayContor >=fileChunkArray.length && lastBitFlag&&chunkStringBUilder.length() == chunkStringContor)
-        {
-        	chunkStringBUilder.setLength(0);
-            chunkStringBUilder.append(lasBit);
-            chunkStringContor = 0;
-            lastBitFlag = false;
-            
-          
-        }
-         if(chunkStringBUilder.length() == chunkStringContor&&lastBitFlag)
-        {
-            chunkStringBUilder.setLength(0);
+	public char getNext(String lasBit, int len) throws IOException {
+		ct++;
 
-            for(int i = 0; i < 10000 && fileArrayContor < fileChunkArray.length; i++)
-            {
+		if (fileArrayContor >= hk && lastBitFlag && lngth == chunkStringContor) {
+			chunkStringBUilder.setLength(0);
+			chunkStringBUilder.append(lasBit);
+			chunkStringContor = 0;
+			lastBitFlag = false;
 
-                chunkStringBUilder.append(Integer.toBinaryString(fileChunkArray[fileArrayContor] & 255 | 256).substring(1));
-                fileArrayContor++;
-            }
-            chunkStringContor = 0;
+		}
+		if (lngth == chunkStringContor && lastBitFlag) {
+			chunkStringBUilder.setLength(0);
+			byte[] buffer = new byte[10000];
+			int length = fis.read(buffer);
+			fileArrayContor += length;
+			for (int i = 0; i < length; i++) {
 
+				chunkStringBUilder.append(Integer.toBinaryString(
+						buffer[i] & 255 | 256).substring(1));
+			}
+			lngth = chunkStringBUilder.length();
+			chunkStringContor = 0;
 
-        }
-        char nextChar = chunkStringBUilder.charAt(chunkStringContor);
-        chunkStringContor++;
-        return nextChar;
-    }
-    public void getCharacter(int len, Node nd, BufferedOutputStream stream, String lastBit)
-            throws NumberFormatException,
-                IOException
-    {
+		}
+		char nextChar = chunkStringBUilder.charAt(chunkStringContor);
+		chunkStringContor++;
+		return nextChar;
+	}
 
-        if(nd.getLeftChild() == null)
-        {
-            stream.write(Integer.parseInt(nd.getVal()));
+	public void getCharacter(int len, Node nd, BufferedOutputStream stream,
+			String lastBit) throws NumberFormatException, IOException {
 
-        }
-        else
-        {
-            char b = getNext(lastBit, len);
-            if(b == '0')
-            {
-                getCharacter(len, nd.getLeftChild(), stream, lastBit);
-            }
-            else
-            {
-                getCharacter(len, nd.getRightChild(), stream, lastBit);
-            }
+		if (nd.getLeftChild() == null) {
+			stream.write(Integer.parseInt(nd.getVal()));
 
-        }
+		} else {
+			char b = getNext(lastBit, len);
+			if (b == '0') {
+				getCharacter(len, nd.getLeftChild(), stream, lastBit);
+			} else {
+				getCharacter(len, nd.getRightChild(), stream, lastBit);
+			}
 
-    }
+		}
+
+	}
 
 }

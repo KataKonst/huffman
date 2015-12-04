@@ -1,10 +1,10 @@
 package huffman;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -61,11 +61,14 @@ public class HuffmanCompression extends AbstractHuffman implements Compression {
 	int ln = 0;
 
 	public ByteArrayOutputStream convert(HashMap<String, String> hm, int size,
-			String file) throws IOException {
+			String file, String dest) throws IOException {
 		ByteArrayOutputStream bs = new ByteArrayOutputStream();
 		StringBuilder bit = new StringBuilder("");
 		fileHandler.close();
 		fileHandler = new FileHandler(file);
+		BufferedOutputStream pr = new BufferedOutputStream(
+				new FileOutputStream(new File(dest)));
+
 		for (int j = 0; j < size; j += 10000) {
 			StringBuilder str = new StringBuilder("");
 
@@ -77,23 +80,29 @@ public class HuffmanCompression extends AbstractHuffman implements Compression {
 				str.append((String) hm.get(String.valueOf(a)).toString());
 
 			}
-
+			ByteArrayOutputStream bss = new ByteArrayOutputStream();
 			for (int i = 0; i < str.length(); i++) {
 
 				if (bit.length() % 8 == 0 && bit.length() != 0) {
 
-					bs.write(Integer.parseInt(bit.toString(), 2));
+					bss.write(Integer.parseInt(bit.toString(), 2));
+
 					bit = new StringBuilder("");
 					ln += 8;
 
 				}
 
 				bit.append(String.valueOf(str.charAt(i)));
-				System.out.print(str.charAt(i));
+				// System.out.print(str.charAt(i));
 
 			}
-		}
+			if(j%1000000==0)
+			System.out.println(j + " " + size);
 
+			pr.write(bss.toByteArray());
+		}
+		pr.flush();
+		pr.close();
 		System.out.println("\n\n");
 		// ln+=bit.length();
 
@@ -120,17 +129,6 @@ public class HuffmanCompression extends AbstractHuffman implements Compression {
 
 	}
 
-	public void writetoFile(String file, ByteArrayOutputStream bp, String length)
-			throws IOException {
-
-		ByteArrayOutputStream bs = new ByteArrayOutputStream();
-		bs.write(bp.toByteArray());
-		FileOutputStream pr = new FileOutputStream(new File(file));
-		pr.write(bs.toByteArray());
-		pr.close();
-
-	}
-
 	FileHandler fileHandler = null;
 
 	public void compress(String file, String des) throws IOException {
@@ -147,9 +145,7 @@ public class HuffmanCompression extends AbstractHuffman implements Compression {
 
 		HashMap<String, String> c = getTable();
 
-		ByteArrayOutputStream bp = convert(c, size, file);
-
-		writetoFile(des, bp, String.valueOf(size));
+		convert(c, size, file, des);
 
 	}
 
@@ -172,8 +168,7 @@ public class HuffmanCompression extends AbstractHuffman implements Compression {
 			FileHandler fl) throws IOException {
 		HashMap<String, String> c = getTable();
 		fileHandler = fl;
-		ByteArrayOutputStream bp = convert(c, size, localFile);
-		writetoFile(destinationARchive, bp, String.valueOf(size));
+
 	}
 
 }

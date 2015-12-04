@@ -20,6 +20,7 @@ public class File implements java.io.Serializable {
 	private Integer fileId;
 	private String fileName;
 	private String md5hash;
+	
 	private String outbit;
 
 	private Integer size;
